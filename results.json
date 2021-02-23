@@ -1,6 +1,6 @@
 [
   {
-    "id": "be20a844-b6d5-466d-ad4d-5cef834e6d3d",
+    "id": "52ba4dc3-5258-4749-9ccb-7f9ab5dbc452",
     "type": "original",
     "numberOfResults": 4,
     "numberOfResorts": 1,
@@ -10,7 +10,7 @@
     "messages": [],
     "bookableResults": [
       {
-        "id": "069a353b-45a9-4861-8a0a-4a314f6a9711",
+        "id": "e821eff1-d0dd-441a-bcb3-39faf0462d59",
         "property": {
           "name": "The Westin Kā‘anapali Ocean Resort Villas",
           "address": "Maui, Hawai‘i",
@@ -56,7 +56,7 @@
             "type": "Required StarOptions",
             "subType": null,
             "reservationWindowStatus": "Reservation Window: Open",
-            "resultId": "2M2077",
+            "resultId": "L7LVD3",
             "balance": "67,100",
             "reservationType": "SVN",
             "room": "1ISD",
@@ -71,13 +71,13 @@
               }
             ],
             "reservationOpen": true,
-            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201206\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"2M2077\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210806\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201206\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"L7LVD3\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210806\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
           }
         ],
         "messages": []
       },
       {
-        "id": "33de28ed-3bc7-4dd8-b559-f82f805c5c79",
+        "id": "fa5053d0-7c22-4ab1-954e-d327a5fe6a38",
         "property": {
           "name": "The Westin Kā‘anapali Ocean Resort Villas",
           "address": "Maui, Hawai‘i",
@@ -123,7 +123,7 @@
             "type": "Required StarOptions",
             "subType": null,
             "reservationWindowStatus": "Reservation Window: Open",
-            "resultId": "7F2V9Q",
+            "resultId": "SG7R09",
             "balance": "67,100",
             "reservationType": "SVN",
             "room": "1ISD",
@@ -138,13 +138,13 @@
               }
             ],
             "reservationOpen": true,
-            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201207\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"7F2V9Q\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210807\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201207\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"SG7R09\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210807\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
           }
         ],
         "messages": []
       },
       {
-        "id": "10df3d4e-0180-429d-8819-9050eec641b9",
+        "id": "73ffae82-86ba-4d22-b744-d86f38725100",
         "property": {
           "name": "The Westin Kā‘anapali Ocean Resort Villas",
           "address": "Maui, Hawai‘i",
@@ -190,7 +190,7 @@
             "type": "Required StarOptions",
             "subType": null,
             "reservationWindowStatus": "Reservation Window: Open",
-            "resultId": "B30CND",
+            "resultId": "X9IAC1",
             "balance": "67,100",
             "reservationType": "SVN",
             "room": "1ISD",
@@ -205,13 +205,13 @@
               }
             ],
             "reservationOpen": true,
-            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201208\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"B30CND\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210808\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201208\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"X9IAC1\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210808\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
           }
         ],
         "messages": []
       },
       {
-        "id": "2310c3d6-3521-4b65-83b1-ab19a0bff9a7",
+        "id": "5170f3d1-6e71-491e-af5f-f703e59cd753",
         "property": {
           "name": "The Westin Kā‘anapali Ocean Resort Villas",
           "address": "Maui, Hawai‘i",
@@ -257,7 +257,7 @@
             "type": "Required StarOptions",
             "subType": null,
             "reservationWindowStatus": "Reservation Window: Open",
-            "resultId": "ZQB1MX",
+            "resultId": "Y2533H",
             "balance": "67,100",
             "reservationType": "SVN",
             "room": "1ISD",
@@ -272,7 +272,7 @@
               }
             ],
             "reservationOpen": true,
-            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201209\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"ZQB1MX\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210809\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201209\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"Y2533H\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210809\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
           }
         ],
         "messages": []

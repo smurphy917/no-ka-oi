@@ -375,7 +375,7 @@ class NoKaOi {
         })
     }
 
-    async handleResults(results: any) {
+    async handleResults(results: any, {recipients: { resultsPresent, always }}:{recipients: {always: string[], resultsPresent: string[]}}) {
         // build result view from template and send email.
         // console.log(JSON.stringify(data,null, 2));
         // logging (temporary)
@@ -403,9 +403,10 @@ class NoKaOi {
         searchUrl.search = qs.stringify(searchParams);
         data.searchLink = searchUrl.toString();
         const html = this.emailTemplate(data);
+        always.forEach(recip => resultsPresent.includes(recip) ? '' : resultsPresent.push(recip));
         this.mailer.sendMail({
             from: 'No Ka Oi <nokaoi.app@gmail.com>',
-            to: 'smurphy917@gmail.com',
+            to: (data.resultCount > 0 ? resultsPresent : always).join(', '),
             subject: data.resultCount === 0 ? 'No availability 😔' : `${data.resultCount} options available 😎`,
             html
         }, (err, info) => {
@@ -417,7 +418,7 @@ class NoKaOi {
         })
     }
 
-    async getIt() {
+    async getIt({recipients}:{recipients: {always:string[], resultsPresent: string[]}}) {
         /*
         GET vistana.com/login
         -> form redir /sso
@@ -460,7 +461,7 @@ class NoKaOi {
             // .then(() => this.searchLogin())
             .then(() => this.search())
             .then(response => {
-                this.handleResults(response.data);
+                this.handleResults(response.data, {recipients});
             })
             .catch(err => {
                 if (err.request) {

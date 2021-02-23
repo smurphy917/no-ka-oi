@@ -1,63 +1,83 @@
 {{#*inline "stay"}}
-    <td><span>{{as-date (jp-single this '$.stayDetails[?(@.label == \'Check In:\')].value') 'mmm-dd-yyyy'}}</span></td>
-    <td><span>{{jp-single this '$.stayDetails[?(@.label == \'Number of Nights:\')].value'}}</span></td>
-    <td><span>{{jp-single this '$.stayDetails[?(@.label == \'Villa Type:\')].value'}} (sleeps {{jp-single this '$.stayDetails[?(@.label == \'Max Occupancy:\')].value'}})</span></td>
-    <!--td>{{#each reservationTypes}}<span>{{type}} - {{balance}} <form method="POST" action="https://villafinder.vistana.com/details"><input type="hidden" value="{{bookableSegment}}"><button type="submit">Book</button></form></span>{{#unless @last}}<br>{{/unless}}{{/each}}</td-->
-    <td>{{#each reservationTypes}}<span>{{type}} - {{balance}} <form method="GET" action="https://villafinder.vistana.com/reserve-villa"><input name="resultId" type="hidden" value="{{resultId}}"><input type="hidden" value="0"><button type="submit">Book</button></form></span>{{#unless @last}}<br>{{/unless}}{{/each}}</td>
+<td><span>{{as-date (jp-single this '$.stayDetails[?(@.label == \'Check In:\')].value') 'mmm-dd-yyyy'}}</span></td>
+<td><span>{{jp-single this '$.stayDetails[?(@.label == \'Number of Nights:\')].value'}}</span></td>
+<td><span>{{jp-single this '$.stayDetails[?(@.label == \'Villa Type:\')].value'}} (sleeps {{jp-single this
+        '$.stayDetails[?(@.label == \'Max Occupancy:\')].value'}})</span></td>
+<!--td>{{#each reservationTypes}}<span>{{type}} - {{balance}} <form method="POST" action="https://villafinder.vistana.com/details"><input type="hidden" value="{{bookableSegment}}"><button type="submit">Book</button></form></span>{{#unless @last}}<br>{{/unless}}{{/each}}</td-->
+<td>{{#each reservationTypes}}<span>{{type}} - {{balance}} <form method="GET"
+            action="https://villafinder.vistana.com/reserve-villa"><input name="resultId" type="hidden"
+                value="{{resultId}}"><input type="hidden" value="0"><button type="submit">Book</button></form>
+        </span>{{#unless @last}}<br>{{/unless}}{{/each}}</td>
 {{/inline}}
-<style>
-    * {
-        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-        font-size: 13px;
-    }
-    table {
-        border-collapse: collapse;
-    }
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" style="width:100%;font-family:'Helvetica Neue', Helvetica, Arial,
+    sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0">
 
-    table td,
-    table th {
-        border: 1px solid black;
-        padding: 8px;
-    }
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <style>
+        body {
+            font-size: 13px;
+        }
 
-    img {
-        max-width: 200px;
-    }
-</style>
-<table style="width: 100%">
+        table {
+            border-collapse: collapse;
+        }
 
-<table align="center" style="width: 600px;">
-    <thead>
-        <tr>
-            <th align="left" colspan="5" style="border: none;"><h2><a href="{{searchLink}}">{{resultCount}} Results</a></h2></th>
-        </tr>
-        <tr>
-            <th>Property</th>
-            <th style="width: 100px;">Check In</th>
-            <th style="width: 80px;">Nights</th>
-            <th style="width: 120px;">Villa Type</th>
-            <th style="width: 120px;">Booking</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#each resorts}}
-        <tr>
-            <td rowspan="{{stays.length}}">
-                <h3>{{name}}</h3><img src="{{resortImage}}" />
-            </td>
-            {{#with stays.[0]}}
-                {{> stay}}
-            {{/with}}
-        </tr>
-        {{#each stays}}
-        {{#unless @first}}
-        <tr>
-            {{> stay}}
-        </tr>
-        {{/unless}}
-        {{/each}}
-        {{/each}}
-    </tbody>
-</table>
-</table>
-<!-- Property -> Dates (check-in date + num of nights), Type (), Type
+        table td,
+        table th {
+            border: 1px solid black;
+            padding: 8px;
+        }
+
+        img {
+            max-width: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <table style="width: 100%; border: none;">
+
+        <table align="center" style="width: 600px;">
+            <thead>
+                <tr>
+                    <th align="left" colspan="5" style="border: none;">
+                        <h2><a href="{{searchLink}}">{{resultCount}} Results</a></h2>
+                    </th>
+                </tr>
+                <tr>
+                    <th>Property</th>
+                    <th style="width: 100px;">Check In</th>
+                    <th style="width: 80px;">Nights</th>
+                    <th style="width: 120px;">Villa Type</th>
+                    <th style="width: 120px;">Booking</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each resorts}}
+                <tr>
+                    <td rowspan="{{stays.length}}">
+                        <h3>{{name}}</h3><img src="{{resortImage}}" />
+                    </td>
+                    {{#with stays.[0]}}
+                    {{> stay}}
+                    {{/with}}
+                </tr>
+                {{#each stays}}
+                {{#unless @first}}
+                <tr>
+                    {{> stay}}
+                </tr>
+                {{/unless}}
+                {{/each}}
+                {{/each}}
+            </tbody>
+        </table>
+    </table>
+</body>
+
+</html>
