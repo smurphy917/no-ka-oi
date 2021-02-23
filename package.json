@@ -7,7 +7,8 @@
   "scripts": {
     "debug": "tsc -b && node -r dotenv/config index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "tsc -b && node -r dotenv/config index.js"
+    "run": "tsc -b && node -r dotenv/config index.js",
+    "start": "node index.js"
   },
   "author": "S.Murphy",
   "license": "ISC",
