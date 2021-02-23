@@ -1,0 +1,282 @@
+[
+  {
+    "id": "be20a844-b6d5-466d-ad4d-5cef834e6d3d",
+    "type": "original",
+    "numberOfResults": 4,
+    "numberOfResorts": 1,
+    "header": "Matches:",
+    "subHeader": null,
+    "priority": 1,
+    "messages": [],
+    "bookableResults": [
+      {
+        "id": "069a353b-45a9-4861-8a0a-4a314f6a9711",
+        "property": {
+          "name": "The Westin Kā‘anapali Ocean Resort Villas",
+          "address": "Maui, Hawai‘i",
+          "resortImage": "https://content.vistana.com/files/live/sites/vistana-digital-content-manager/files/images/properties/wkorv/17-OOC-1265-Hero-WKORVsvo1406ex.15130-16-9.png",
+          "propertyNumber": "19",
+          "resortUrl": "https://www.vistana.com/destinations/the-westin-kaanapali-ocean-resort-villas/overview"
+        },
+        "ranking": {
+          "starOptionRank": 1,
+          "checkInRank": 1,
+          "villaRank": 1,
+          "resortRank": 1
+        },
+        "stayDetails": [
+          {
+            "label": "Check In:",
+            "value": "Fri, August 06, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Check Out:",
+            "value": "Fri, August 13, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Number of Nights:",
+            "value": "7",
+            "tooltip": null
+          },
+          {
+            "label": "Villa Type:",
+            "value": "Studio Premium Villa",
+            "tooltip": null
+          },
+          {
+            "label": "Max Occupancy:",
+            "value": "4",
+            "tooltip": null
+          }
+        ],
+        "reservationTypes": [
+          {
+            "type": "Required StarOptions",
+            "subType": null,
+            "reservationWindowStatus": "Reservation Window: Open",
+            "resultId": "2M2077",
+            "balance": "67,100",
+            "reservationType": "SVN",
+            "room": "1ISD",
+            "offerTypes": [],
+            "reservationFlags": [
+              {
+                "type": "LOW",
+                "color": "#78bc42",
+                "icon": "fa-arrow-circle-down",
+                "title": "Low Availability",
+                "tooltip": "Low Availability: At the moment, there's low availability for this particular vacation (resort, villa type, date, etc) and as always can change quickly."
+              }
+            ],
+            "reservationOpen": true,
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201206\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"2M2077\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210806\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+          }
+        ],
+        "messages": []
+      },
+      {
+        "id": "33de28ed-3bc7-4dd8-b559-f82f805c5c79",
+        "property": {
+          "name": "The Westin Kā‘anapali Ocean Resort Villas",
+          "address": "Maui, Hawai‘i",
+          "resortImage": "https://content.vistana.com/files/live/sites/vistana-digital-content-manager/files/images/properties/wkorv/17-OOC-1265-Hero-WKORVsvo1406ex.15130-16-9.png",
+          "propertyNumber": "19",
+          "resortUrl": "https://www.vistana.com/destinations/the-westin-kaanapali-ocean-resort-villas/overview"
+        },
+        "ranking": {
+          "starOptionRank": 2,
+          "checkInRank": 2,
+          "villaRank": 2,
+          "resortRank": 2
+        },
+        "stayDetails": [
+          {
+            "label": "Check In:",
+            "value": "Sat, August 07, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Check Out:",
+            "value": "Sat, August 14, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Number of Nights:",
+            "value": "7",
+            "tooltip": null
+          },
+          {
+            "label": "Villa Type:",
+            "value": "Studio Premium Villa",
+            "tooltip": null
+          },
+          {
+            "label": "Max Occupancy:",
+            "value": "4",
+            "tooltip": null
+          }
+        ],
+        "reservationTypes": [
+          {
+            "type": "Required StarOptions",
+            "subType": null,
+            "reservationWindowStatus": "Reservation Window: Open",
+            "resultId": "7F2V9Q",
+            "balance": "67,100",
+            "reservationType": "SVN",
+            "room": "1ISD",
+            "offerTypes": [],
+            "reservationFlags": [
+              {
+                "type": "LOW",
+                "color": "#78bc42",
+                "icon": "fa-arrow-circle-down",
+                "title": "Low Availability",
+                "tooltip": "Low Availability: At the moment, there's low availability for this particular vacation (resort, villa type, date, etc) and as always can change quickly."
+              }
+            ],
+            "reservationOpen": true,
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201207\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"7F2V9Q\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210807\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+          }
+        ],
+        "messages": []
+      },
+      {
+        "id": "10df3d4e-0180-429d-8819-9050eec641b9",
+        "property": {
+          "name": "The Westin Kā‘anapali Ocean Resort Villas",
+          "address": "Maui, Hawai‘i",
+          "resortImage": "https://content.vistana.com/files/live/sites/vistana-digital-content-manager/files/images/properties/wkorv/17-OOC-1265-Hero-WKORVsvo1406ex.15130-16-9.png",
+          "propertyNumber": "19",
+          "resortUrl": "https://www.vistana.com/destinations/the-westin-kaanapali-ocean-resort-villas/overview"
+        },
+        "ranking": {
+          "starOptionRank": 3,
+          "checkInRank": 3,
+          "villaRank": 3,
+          "resortRank": 3
+        },
+        "stayDetails": [
+          {
+            "label": "Check In:",
+            "value": "Sun, August 08, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Check Out:",
+            "value": "Sun, August 15, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Number of Nights:",
+            "value": "7",
+            "tooltip": null
+          },
+          {
+            "label": "Villa Type:",
+            "value": "Studio Premium Villa",
+            "tooltip": null
+          },
+          {
+            "label": "Max Occupancy:",
+            "value": "4",
+            "tooltip": null
+          }
+        ],
+        "reservationTypes": [
+          {
+            "type": "Required StarOptions",
+            "subType": null,
+            "reservationWindowStatus": "Reservation Window: Open",
+            "resultId": "B30CND",
+            "balance": "67,100",
+            "reservationType": "SVN",
+            "room": "1ISD",
+            "offerTypes": [],
+            "reservationFlags": [
+              {
+                "type": "LOW",
+                "color": "#78bc42",
+                "icon": "fa-arrow-circle-down",
+                "title": "Low Availability",
+                "tooltip": "Low Availability: At the moment, there's low availability for this particular vacation (resort, villa type, date, etc) and as always can change quickly."
+              }
+            ],
+            "reservationOpen": true,
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201208\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"B30CND\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210808\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+          }
+        ],
+        "messages": []
+      },
+      {
+        "id": "2310c3d6-3521-4b65-83b1-ab19a0bff9a7",
+        "property": {
+          "name": "The Westin Kā‘anapali Ocean Resort Villas",
+          "address": "Maui, Hawai‘i",
+          "resortImage": "https://content.vistana.com/files/live/sites/vistana-digital-content-manager/files/images/properties/wkorv/17-OOC-1265-Hero-WKORVsvo1406ex.15130-16-9.png",
+          "propertyNumber": "19",
+          "resortUrl": "https://www.vistana.com/destinations/the-westin-kaanapali-ocean-resort-villas/overview"
+        },
+        "ranking": {
+          "starOptionRank": 4,
+          "checkInRank": 4,
+          "villaRank": 4,
+          "resortRank": 4
+        },
+        "stayDetails": [
+          {
+            "label": "Check In:",
+            "value": "Mon, August 09, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Check Out:",
+            "value": "Mon, August 16, 2021",
+            "tooltip": null
+          },
+          {
+            "label": "Number of Nights:",
+            "value": "7",
+            "tooltip": null
+          },
+          {
+            "label": "Villa Type:",
+            "value": "Studio Premium Villa",
+            "tooltip": null
+          },
+          {
+            "label": "Max Occupancy:",
+            "value": "4",
+            "tooltip": null
+          }
+        ],
+        "reservationTypes": [
+          {
+            "type": "Required StarOptions",
+            "subType": null,
+            "reservationWindowStatus": "Reservation Window: Open",
+            "resultId": "ZQB1MX",
+            "balance": "67,100",
+            "reservationType": "SVN",
+            "room": "1ISD",
+            "offerTypes": [],
+            "reservationFlags": [
+              {
+                "type": "LOW",
+                "color": "#78bc42",
+                "icon": "fa-arrow-circle-down",
+                "title": "Low Availability",
+                "tooltip": "Low Availability: At the moment, there's low availability for this particular vacation (resort, villa type, date, etc) and as always can change quickly."
+              }
+            ],
+            "reservationOpen": true,
+            "bookableSegment": "{\"adaFeatures\":\"\",\"adaUnitNumber\":\"\",\"clubCode\":\"\",\"condoCompany\":\"\",\"dateFirstBookable\":\"20201209\",\"lowAvailability\":\"Y\",\"maximumOccupancy\":4,\"normalOccupancy\":4,\"numberDays\":7,\"propertyNumber\":\"19\",\"rank\":0,\"reservationType\":\"SVN\",\"resultId\":\"ZQB1MX\",\"roomType\":\"1ISD\",\"seasonDescription\":\"\",\"seasonValue\":\"\",\"starOptions\":\"67100\",\"startDate\":\"20210809\",\"unitSize\":\"STUDIO\",\"unitSizeDescription\":\"Studio Premium Villa\",\"upgradeFee\":0.0,\"view\":\"\",\"vsnEscapesOffer\":\"N\",\"book\":\"Y\",\"todaysDate\":\"02/23/2021\",\"ADA\":false,\"resOpen\":true}"
+          }
+        ],
+        "messages": []
+      }
+    ]
+  }
+]

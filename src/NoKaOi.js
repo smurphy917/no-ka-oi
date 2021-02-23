@@ -6,11 +6,47 @@ const { JSDOM } = pkg;
 import jQuery from 'jquery';
 import Tough from 'tough-cookie';
 const { Cookie, CookieJar } = Tough;
+import fs from 'fs/promises';
+import Handlebars from 'handlebars';
+import nodemailer from 'nodemailer';
+import path from 'path';
+import qs from 'qs';
+import jsonpath from 'jsonpath';
+import dateformat from 'dateformat';
+Handlebars.registerHelper('jp', function (root, path, context) {
+    if (Array.isArray(root)) {
+        root = { __temp: root };
+        path = path.replace('$', "$['__temp']");
+    }
+    try {
+        return jsonpath.query(root, path);
+    }
+    catch (err) {
+        console.error(err);
+    }
+});
+Handlebars.registerHelper('jp-single', function (root, path, context) {
+    if (Array.isArray(root)) {
+        root = { __temp: root };
+        path = path.replace('$', "$['__temp']");
+    }
+    try {
+        return jsonpath.query(root, path)[0];
+    }
+    catch (err) {
+        console.error(err);
+    }
+});
+Handlebars.registerHelper('as-date', function (dateString, formatString) {
+    const date = new Date(dateString);
+    return dateformat(date, formatString);
+});
 const jar = new CookieJar();
 axios.defaults.withCredentials = true;
 // axios.defaults.xsrfCookieName = '__cfduid';
 axios.defaults.maxRedirects = 0;
 axios.defaults.validateStatus = (status) => status >= 200 && status < 303;
+axios.defaults.paramsSerializer = params => qs.stringify(params, { arrayFormat: 'comma' });
 // Add cookies to requests
 axios.interceptors.request.use(async (config) => {
     const cookieStr = await jar.getCookieString(config.url, { allPaths: true });
@@ -69,8 +105,39 @@ class AuthenticationError extends Error {
         super(...args);
     }
 }
-const USER = 'kantex8888', PW = 'Bktw04220422!', REGION = 'us-east-1', SEARCH_URL = 'https://api.vistana.com/exp/v1/bookable-segments?checkinDate=2021-08-07&numOfNights=7&unitSizes=ALL&properties=19,25,44&ada=false&combine=true&showAll=false&flex=true', AUTH_URL = 'https://login.vistana.com/sso/authenticate';
+const searchParams = {
+    checkinDate: '2021-08-07',
+    numOfNights: 7,
+    unitSizes: 'ALL',
+    properties: ['19', '25', '44'],
+    ada: false,
+    combine: true,
+    showAll: false,
+    flex: true
+};
+const USER = `${process.env.VSE_USER}`, PW = `${process.env.VSE_PW}`, REGION = 'us-east-1', SEARCH_URL = 'https://api.vistana.com/exp/v1/bookable-segments', AUTH_URL = 'https://login.vistana.com/sso/authenticate';
 class NoKaOi {
+    constructor() {
+        // this.mailer = nodemailer.createTransport({sendmail: true});
+        this.mailer = nodemailer.createTransport({
+            port: 465,
+            secure: true,
+            host: 'smtp.gmail.com',
+            auth: {
+                user: 'nokaoi.app@gmail.com',
+                pass: 'ik%afunJwKc&8y@Uu8W58L9mi#Ea'
+            }
+        });
+    }
+    async setTemplate() {
+        try {
+            const fileUrl = import.meta.url;
+            this.emailTemplate = Handlebars.compile((await fs.readFile(path.resolve(path.dirname((new URL(import.meta.url).pathname)), './templates/email.tmpl'))).toString('utf8'));
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
     setState({ request }) {
         const state = (new URL(request.protocol + request.host + request.path)).searchParams.get('state');
         this.state = state;
@@ -254,10 +321,51 @@ class NoKaOi {
     async search() {
         console.log("***SEARCH***");
         return this.get(SEARCH_URL, {
+            params: searchParams,
             headers: {
                 Authorization: `Bearer ${this.token}`,
                 api_key: this.apiKey
             }
+        });
+    }
+    async handleResults(results) {
+        // build result view from template and send email.
+        // console.log(JSON.stringify(data,null, 2));
+        // logging (temporary)
+        fs.writeFile(path.resolve(path.dirname((new URL(import.meta.url)).pathname), '../results.json'), JSON.stringify(results, null, 2), { flag: 'w+' });
+        if (!this.emailTemplate) {
+            await this.setTemplate();
+        }
+        const data = { searchLink: '', resultCount: 0, resorts: [] };
+        results = Array.isArray(results) ? results : [results];
+        results.forEach((result) => {
+            data.resultCount += result.numberOfResults;
+            result.bookableResults.forEach((bResult) => {
+                const resortId = bResult.property.propertyNumber;
+                let resortData = data.resorts.find(res => res.propertyNumber === resortId);
+                if (!resortData) {
+                    const resortIdx = data.resorts.push(JSON.parse(JSON.stringify(bResult.property))) - 1;
+                    resortData = data.resorts[resortIdx];
+                    resortData.stays = [];
+                }
+                resortData.stays.push(bResult);
+            });
+        });
+        const searchUrl = new URL(SEARCH_URL);
+        searchUrl.search = qs.stringify(searchParams);
+        data.searchLink = searchUrl.toString();
+        const html = this.emailTemplate(data);
+        this.mailer.sendMail({
+            from: 'No Ka Oi <nokaoi.app@gmail.com>',
+            to: 'smurphy917@gmail.com',
+            subject: data.resultCount === 0 ? 'No availability 😔' : `${data.resultCount} options available 😎`,
+            html
+        }, (err, info) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            console.info(info);
         });
     }
     async getIt() {
@@ -303,7 +411,7 @@ class NoKaOi {
             // .then(() => this.searchLogin())
             .then(() => this.search())
             .then(response => {
-            debugger;
+            this.handleResults(response.data);
         })
             .catch(err => {
             if (err.request) {

@@ -1,3 +1,3 @@
-import NoKaOi from './src/NoKaOi.js';
+import { Run } from './src/NightManager.js';
 
-NoKaOi.getIt();
+Run();

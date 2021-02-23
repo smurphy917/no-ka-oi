@@ -6,6 +6,45 @@ const { JSDOM } = pkg;
 import jQuery from 'jquery';
 import Tough from 'tough-cookie';
 const { Cookie, CookieJar } = Tough;
+import fs from 'fs/promises';
+import Handlebars from 'handlebars';
+import nodemailer from 'nodemailer';
+import Mail from 'nodemailer/lib/mailer';
+import path from 'path';
+import qs from 'qs';
+import jsonpath from 'jsonpath';
+import dateformat from 'dateformat';
+
+Handlebars.registerHelper('jp', function (root, path, context) {
+    if(Array.isArray(root)) {
+        root = {__temp: root};
+        path = path.replace('$', "$['__temp']");
+    }
+    try{
+        return jsonpath.query(root, path);
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+Handlebars.registerHelper('jp-single', function(root, path, context) {
+    if(Array.isArray(root)) {
+        root = {__temp: root};
+        path = path.replace('$', "$['__temp']");
+    }
+    try{
+        return jsonpath.query(root, path)[0];
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+Handlebars.registerHelper('as-date', function(dateString, formatString) {
+    const date = new Date(dateString);
+    return dateformat(date, formatString);
+})
+
+
 
 const jar = new CookieJar();
 
@@ -13,6 +52,7 @@ axios.defaults.withCredentials = true;
 // axios.defaults.xsrfCookieName = '__cfduid';
 axios.defaults.maxRedirects = 0;
 axios.defaults.validateStatus = (status) => status >= 200 && status < 303;
+axios.defaults.paramsSerializer = params => qs.stringify(params, { arrayFormat: 'comma' });
 
 // Add cookies to requests
 axios.interceptors.request.use(async config => {
@@ -30,9 +70,9 @@ axios.interceptors.response.use(response => {
         (Array.isArray(cookieSource) ? cookieSource : cookieSource.split(',')).forEach((cookie: string) => {
             jar.setCookie(cookie.indexOf('domain=') > -1 ? cookie : `${cookie}; domain=${urlObj.hostname}`
                 , response.config.url!, (err, cookie) => {
-                    if(err){
+                    if (err) {
                         console.warn(err);
-                    }else{
+                    } else {
                         console.log(`\t\tcookie stored: ${cookie.key}`);
                     }
                 })
@@ -43,7 +83,7 @@ axios.interceptors.response.use(response => {
 
 // Manually handle redirects (to support adding cookies)
 axios.interceptors.response.use(response => {
-    if([301, 302].includes(response.status)) {
+    if ([301, 302].includes(response.status)) {
         console.log(`\t${response.status} -> ${response.headers['location']}`);
         return axios.get(response.headers['location'], response.config);
     }
@@ -78,16 +118,51 @@ class AuthenticationError extends Error {
     }
 }
 
-const USER = 'kantex8888',
-    PW = 'Bktw04220422!',
+const searchParams = {
+    checkinDate: '2021-08-07',
+    numOfNights: 7,
+    unitSizes: 'ALL',
+    properties: ['19', '25', '44'],
+    ada: false,
+    combine: true,
+    showAll: false,
+    flex: true
+}
+
+const USER = `${process.env.VSE_USER}`,
+    PW = `${process.env.VSE_PW}`,
     REGION = 'us-east-1',
-    SEARCH_URL = 'https://api.vistana.com/exp/v1/bookable-segments?checkinDate=2021-08-07&numOfNights=7&unitSizes=ALL&properties=19,25,44&ada=false&combine=true&showAll=false&flex=true',
+    SEARCH_URL = 'https://api.vistana.com/exp/v1/bookable-segments',
     AUTH_URL = 'https://login.vistana.com/sso/authenticate';
 
 class NoKaOi {
     token!: string;
     state!: string;
     apiKey!: string;
+    emailTemplate!: HandlebarsTemplateDelegate;
+    mailer!: Mail;
+
+    constructor() {
+        // this.mailer = nodemailer.createTransport({sendmail: true});
+        this.mailer = nodemailer.createTransport({
+            port: 465,
+            secure: true,
+            host: 'smtp.gmail.com',
+            auth: {
+                user: 'nokaoi.app@gmail.com',
+                pass: 'ik%afunJwKc&8y@Uu8W58L9mi#Ea'
+            }
+        })
+    }
+
+    async setTemplate() {
+        try {
+            const fileUrl = import.meta.url;
+            this.emailTemplate = Handlebars.compile((await fs.readFile(path.resolve(path.dirname((new URL(import.meta.url).pathname)), './templates/email.tmpl'))).toString('utf8'));
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     setState({ request }: AxiosError) {
         const state = (new URL(request.protocol + request.host + request.path)).searchParams.get('state') as string;
@@ -112,7 +187,7 @@ class NoKaOi {
                 //     ...form.getHeaders()
             }
         }).then(response => {
-            if(!redirPath || response.request.path == redirPath){
+            if (!redirPath || response.request.path == redirPath) {
                 this.setPageKeys(response);
             } else {
                 throw new AuthenticationError(`Unexpected redirect path - expected: ${redirPath}; received: ${response.request.path}`);
@@ -192,7 +267,7 @@ class NoKaOi {
             method = form.attr('method')?.toLowerCase();
         console.log(`\tForm Redirecting to: ${url}`);
         if (method === 'post') {
-            const formData: {[key:string]: string} = {};
+            const formData: { [key: string]: string } = {};
             form.find('input').each((_idx, input) => {
                 formData[input.name] = input.value;
             });
@@ -267,8 +342,8 @@ class NoKaOi {
             console.log('\t-> API Key set from key element!');
         }
         // Check for token element
-        const tokenElem =  $('#data-store-jwt');
-        if(tokenElem.length) {
+        const tokenElem = $('#data-store-jwt');
+        if (tokenElem.length) {
             this.token = tokenElem.data('jwt');
             console.log('\t -> Token set from token element!');
         }
@@ -292,6 +367,7 @@ class NoKaOi {
     async search() {
         console.log("***SEARCH***");
         return this.get(SEARCH_URL, {
+            params: searchParams,
             headers: {
                 Authorization: `Bearer ${this.token}`,
                 api_key: this.apiKey
@@ -299,8 +375,46 @@ class NoKaOi {
         })
     }
 
-    async handleResults(data) {
+    async handleResults(results: any) {
         // build result view from template and send email.
+        // console.log(JSON.stringify(data,null, 2));
+        // logging (temporary)
+        fs.writeFile(path.resolve(path.dirname((new URL(import.meta.url)).pathname), '../results.json'), JSON.stringify(results, null, 2), { flag: 'w+' });
+
+        if (!this.emailTemplate) {
+            await this.setTemplate();
+        }
+        const data: {searchLink: string, resultCount: number, resorts: any[]} = { searchLink: '', resultCount: 0, resorts: [] };
+        results = Array.isArray(results) ? results : [results];
+        results.forEach((result: any) => {
+            data.resultCount += result.numberOfResults;
+            result.bookableResults.forEach((bResult: any) => {
+                const resortId = bResult.property.propertyNumber;
+                let resortData = data.resorts.find(res => res.propertyNumber === resortId);
+                if (!resortData) {
+                    const resortIdx = data.resorts.push(JSON.parse(JSON.stringify(bResult.property))) - 1;
+                    resortData = data.resorts[resortIdx];
+                    resortData.stays = [];
+                }
+                resortData.stays.push(bResult);
+            })
+        });
+        const searchUrl = new URL(SEARCH_URL);
+        searchUrl.search = qs.stringify(searchParams);
+        data.searchLink = searchUrl.toString();
+        const html = this.emailTemplate(data);
+        this.mailer.sendMail({
+            from: 'No Ka Oi <nokaoi.app@gmail.com>',
+            to: 'smurphy917@gmail.com',
+            subject: data.resultCount === 0 ? 'No availability 😔' : `${data.resultCount} options available 😎`,
+            html
+        }, (err, info) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            console.info(info);
+        })
     }
 
     async getIt() {
