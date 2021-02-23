@@ -149,8 +149,8 @@ class NoKaOi {
             secure: true,
             host: 'smtp.gmail.com',
             auth: {
-                user: 'nokaoi.app@gmail.com',
-                pass: 'ik%afunJwKc&8y@Uu8W58L9mi#Ea'
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PW
             }
         })
     }
