@@ -3,9 +3,11 @@ import jsonpath from 'jsonpath';
 import fs from 'fs/promises';
 import path from 'path';
 import dateformat from 'dateformat';
+import NoKaOi from './src/NoKaOi.js';
+
 
 const __dirname = path.dirname((new URL(import.meta.url)).pathname);
-
+/*
 Handlebars.registerHelper('jp', function (root, path, context) {
     if(Array.isArray(root)) {
         root = {__temp: root};
@@ -34,9 +36,14 @@ Handlebars.registerHelper('as-date', function(dateString, formatString) {
     const date = new Date(dateString);
     return dateformat(date, formatString);
 })
+*/
 
 async function run() {
     let results = JSON.parse((await fs.readFile(path.resolve(__dirname, 'results.json'))).toString('utf8'));
+    NoKaOi.handleResults(results, {recipients: {always: ['smurphy917@gmail.com'], resultsPresent: ['samuel.murphy@piercewashington.com']}, withContent: (html) => {
+        fs.writeFile(path.join(__dirname, 'email-output.html'),template(data));
+    }});
+    /*
     const template = Handlebars.compile((await fs.readFile(path.resolve(__dirname, './src/templates/email.tmpl'))).toString('utf8'));
     const data = { resultCount: 0, resorts: [] };
     results = Array.isArray(results) ? results : [results];
@@ -54,6 +61,7 @@ async function run() {
         })
     });
     fs.writeFile(path.join(__dirname, 'email-output.html'),template(data));
+    */
 }
 
 run();

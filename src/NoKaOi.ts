@@ -15,36 +15,96 @@ import qs from 'qs';
 import jsonpath from 'jsonpath';
 import dateformat from 'dateformat';
 
+export type VillaSearchParams = {
+    checkinDate?: string;
+    numOfNights?: number;
+    unitSizes?: 'ALL' | string[];
+    properties?: string[];
+    ada?: boolean;
+    combine?: boolean;
+    showAll?: boolean;
+    flex?: boolean;
+};
+type BookableResult = {
+    id: string;
+    property: {
+        name: string,
+        address: string,
+        resortImage: string,
+        propertyNumber: number,
+        resortUrl: string
+    };
+    ranking: {
+        starOptionRank: number,
+        checkInRank: number,
+        villaRank: number,
+        resortRank: number
+    };
+    stayDetails:
+    {
+        label: string,
+        value: string,
+        tooltip: string
+    }[];
+    reservationTypes:
+    {
+        type: string,
+        subType: string,
+        reservationWindowStatus: string,
+        resultId: string,
+        balance: string,
+        reservationType: string,
+        room: string,
+        offerTypes: any[],
+        reservationFlags:
+        {
+            type: string,
+            color: string,
+            icon: string
+            title: string,
+            tooltip: string
+        }[]
+        reservationOpen: boolean,
+        bookableSegment: string
+    }[];
+
+    messages: any[];
+    active?: boolean;
+}
+
 Handlebars.registerHelper('jp', function (root, path, context) {
-    if(Array.isArray(root)) {
-        root = {__temp: root};
+    if (Array.isArray(root)) {
+        root = { __temp: root };
         path = path.replace('$', "$['__temp']");
     }
-    try{
+    try {
         return jsonpath.query(root, path);
     } catch (err) {
         console.error(err);
     }
 });
 
-Handlebars.registerHelper('jp-single', function(root, path, context) {
-    if(Array.isArray(root)) {
-        root = {__temp: root};
+Handlebars.registerHelper('jp-single', function (root, path, context) {
+    if (Array.isArray(root)) {
+        root = { __temp: root };
         path = path.replace('$', "$['__temp']");
     }
-    try{
+    try {
         return jsonpath.query(root, path)[0];
     } catch (err) {
         console.error(err);
     }
 });
 
-Handlebars.registerHelper('as-date', function(dateString, formatString) {
-    const date = new Date(dateString);
-    return dateformat(date, formatString);
-})
-
-
+Handlebars.registerHelper('as-date', function (dateString, formatString) {
+    try {
+        const date = new Date(dateString);
+        return dateformat(date, formatString);
+    } catch (err) {
+        console.warn(err);
+        return dateString;
+    }
+});
 
 const jar = new CookieJar();
 
@@ -52,7 +112,7 @@ axios.defaults.withCredentials = true;
 // axios.defaults.xsrfCookieName = '__cfduid';
 axios.defaults.maxRedirects = 0;
 axios.defaults.validateStatus = (status) => status >= 200 && status < 303;
-axios.defaults.paramsSerializer = params => qs.stringify(params, { arrayFormat: 'comma' });
+axios.defaults.paramsSerializer = params => qs.stringify(params, { arrayFormat: 'comma' }); //.replace(/%2C/g, ',');
 
 // Add cookies to requests
 axios.interceptors.request.use(async config => {
@@ -118,7 +178,7 @@ class AuthenticationError extends Error {
     }
 }
 
-const searchParams = {
+const searchParams: VillaSearchParams = {
     checkinDate: '2021-08-07',
     numOfNights: 7,
     unitSizes: 'ALL',
@@ -141,6 +201,8 @@ class NoKaOi {
     apiKey!: string;
     emailTemplate!: HandlebarsTemplateDelegate;
     mailer!: Mail;
+    resultCache: { bookableResults: BookableResult[] } = { bookableResults: [] };
+    searchParams = searchParams;
 
     constructor() {
         // this.mailer = nodemailer.createTransport({sendmail: true});
@@ -367,7 +429,7 @@ class NoKaOi {
     async search() {
         console.log("***SEARCH***");
         return this.get(SEARCH_URL, {
-            params: searchParams,
+            params: this.searchParams,
             headers: {
                 Authorization: `Bearer ${this.token}`,
                 api_key: this.apiKey
@@ -375,19 +437,56 @@ class NoKaOi {
         })
     }
 
-    async handleResults(results: any, {recipients: { resultsPresent, always }}:{recipients: {always: string[], resultsPresent: string[]}}) {
+    checkAndCache(bookableResult: BookableResult) {
+        /*
+        const cachedResults = jsonpath.query(this.resultCache, `$.bookableResults[?(@.property.propertyNumber == ${bookableResult.property.propertyNumber} && @.stayDetails[?(@.label == 'Check In:')].value == ${bookableResult!.stayDetails!.find(det => det.label == 'Check In:')?.value || 'bogus'} && @.stayDetails[?(@.label == 'Villa Type:')].value == ${bookableResult!.stayDetails.find(det => det.label == 'Villa Type:')
+        ?.value || 'bogus'})]`) as BookableResult[];
+        */
+        const cachedResult = this.resultCache.bookableResults.find(cached => {
+            let match = cached.property.propertyNumber === bookableResult.property.propertyNumber;
+            return match ? cached.stayDetails.reduce((_match: boolean, det) => {
+                return _match === false ? _match : 
+                    det.label === 'Check In:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Check In:')?.value : 
+                    det.label === 'Villa Type:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Villa Type:')?.value : 
+                    _match;
+            }, match) : false;       
+        })
+        if (cachedResult) {
+            cachedResult.active = true;
+            return { ...bookableResult, new: false };
+        } else {
+            this.resultCache.bookableResults.push({ ...bookableResult, active: true });
+            return { ...bookableResult, new: true };
+        }
+    }
+
+    refreshCache() {
+        this.resultCache.bookableResults = this.resultCache.bookableResults.filter(res => res.active).map(res => {
+            delete res.active;
+            return res
+        });
+    }
+
+    async handleResults(results: any, { recipients: { resultsPresent, always } }: { recipients: { always: string[], resultsPresent: string[] } }) {
         // build result view from template and send email.
         // console.log(JSON.stringify(data,null, 2));
         // logging (temporary)
+        jar.removeAllCookies().then(() => {
+            console.log('Cookies cleared!');
+        }).catch(err => {
+            console.error(err);
+        })
+        always = always || [];
+        resultsPresent = resultsPresent || [];
         fs.writeFile(path.resolve(path.dirname((new URL(import.meta.url)).pathname), '../results.json'), JSON.stringify(results, null, 2), { flag: 'w+' });
 
         if (!this.emailTemplate) {
             await this.setTemplate();
         }
-        const data: {searchLink: string, resultCount: number, resorts: any[]} = { searchLink: '', resultCount: 0, resorts: [] };
+        const data: { searchLink: string, resultCounts: { total: number, new: number }, resorts: any[] } = { searchLink: '', resultCounts: { total: 0, new: 0 }, resorts: [] };
         results = Array.isArray(results) ? results : [results];
         results.forEach((result: any) => {
-            data.resultCount += result.numberOfResults;
+            data.resultCounts.total += result.numberOfResults;
             result.bookableResults.forEach((bResult: any) => {
                 const resortId = bResult.property.propertyNumber;
                 let resortData = data.resorts.find(res => res.propertyNumber === resortId);
@@ -396,18 +495,24 @@ class NoKaOi {
                     resortData = data.resorts[resortIdx];
                     resortData.stays = [];
                 }
+                if(bResult.stayDetails.length) {
+                    bResult = this.checkAndCache(bResult);
+                }
+                if (bResult.new) {
+                    data.resultCounts.new++;
+                }
                 resortData.stays.push(bResult);
             })
         });
         const searchUrl = new URL(SEARCH_URL);
-        searchUrl.search = qs.stringify(searchParams);
+        searchUrl.search = qs.stringify(this.searchParams);
         data.searchLink = searchUrl.toString();
         const html = this.emailTemplate(data);
         always.forEach(recip => resultsPresent.includes(recip) ? '' : resultsPresent.push(recip));
         this.mailer.sendMail({
             from: 'No Ka Oi <nokaoi.app@gmail.com>',
-            to: (data.resultCount > 0 ? resultsPresent : always).join(', '),
-            subject: data.resultCount === 0 ? 'No availability 😔' : `${data.resultCount} options available 😎`,
+            to: (data.resultCounts.new > 0 ? resultsPresent : always).join(', '),
+            subject: data.resultCounts.new === 0 ? 'No new availability 😔' : `${data.resultCounts.new} new options available 😎`,
             html
         }, (err, info) => {
             if (err) {
@@ -418,7 +523,7 @@ class NoKaOi {
         })
     }
 
-    async getIt({recipients}:{recipients: {always:string[], resultsPresent: string[]}}) {
+    async getIt({ searchParams, recipients }: { searchParams: VillaSearchParams, recipients: { always: string[], resultsPresent: string[] } }) {
         /*
         GET vistana.com/login
         -> form redir /sso
@@ -447,6 +552,9 @@ class NoKaOi {
 
         API /bookableSegments
         */
+
+        this.searchParams = {...this.searchParams, ...searchParams};
+
         this.get('https://villafinder.vistana.com')
             // this.login()
             .catch(err => {
@@ -461,7 +569,7 @@ class NoKaOi {
             // .then(() => this.searchLogin())
             .then(() => this.search())
             .then(response => {
-                this.handleResults(response.data, {recipients});
+                this.handleResults(response.data, { recipients });
             })
             .catch(err => {
                 if (err.request) {

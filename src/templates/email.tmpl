@@ -1,4 +1,5 @@
 {{#*inline "stay"}}
+{{#if stayDetails}}
 <td><span>{{as-date (jp-single this '$.stayDetails[?(@.label == \'Check In:\')].value') 'mmm-dd-yyyy'}}</span></td>
 <td><span>{{jp-single this '$.stayDetails[?(@.label == \'Number of Nights:\')].value'}}</span></td>
 <td><span>{{jp-single this '$.stayDetails[?(@.label == \'Villa Type:\')].value'}} (sleeps {{jp-single this
@@ -8,6 +9,12 @@
             action="https://villafinder.vistana.com/reserve-villa"><input name="resultId" type="hidden"
                 value="{{resultId}}"><input type="hidden" value="0"><button type="submit">Book</button></form>
         </span>{{#unless @last}}<br>{{/unless}}{{/each}}</td>
+{{else}}
+<td>None available</td>
+<td></td>
+<td>None available</td>
+<td></td>
+{{/if}}
 {{/inline}}
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -36,6 +43,10 @@
         img {
             max-width: 200px;
         }
+
+        .new {
+            background-color: lightgreen;
+        }
     </style>
 </head>
 
@@ -46,7 +57,7 @@
             <thead>
                 <tr>
                     <th align="left" colspan="5" style="border: none;">
-                        <h2><a href="{{searchLink}}">{{resultCount}} Results</a></h2>
+                        <h2><a href="{{searchLink}}">{{#if resultCounts.total}}{{resultCounts.total}}{{else}}No{{/if}} Results{{#if resultCounts.new}} ({{resultCounts.new}} new!){{/if}}</a></h2>
                     </th>
                 </tr>
                 <tr>
@@ -59,7 +70,7 @@
             </thead>
             <tbody>
                 {{#each resorts}}
-                <tr>
+                <tr{{#if stays.[0].new}} class="new"{{/if}}>
                     <td rowspan="{{stays.length}}">
                         <h3>{{name}}</h3><img src="{{resortImage}}" />
                     </td>
@@ -69,7 +80,7 @@
                 </tr>
                 {{#each stays}}
                 {{#unless @first}}
-                <tr>
+                <tr{{#if new}} class="new"{{/if}}>
                     {{> stay}}
                 </tr>
                 {{/unless}}

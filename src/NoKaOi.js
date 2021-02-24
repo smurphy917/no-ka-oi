@@ -38,15 +38,21 @@ Handlebars.registerHelper('jp-single', function (root, path, context) {
     }
 });
 Handlebars.registerHelper('as-date', function (dateString, formatString) {
-    const date = new Date(dateString);
-    return dateformat(date, formatString);
+    try {
+        const date = new Date(dateString);
+        return dateformat(date, formatString);
+    }
+    catch (err) {
+        console.warn(err);
+        return dateString;
+    }
 });
 const jar = new CookieJar();
 axios.defaults.withCredentials = true;
 // axios.defaults.xsrfCookieName = '__cfduid';
 axios.defaults.maxRedirects = 0;
 axios.defaults.validateStatus = (status) => status >= 200 && status < 303;
-axios.defaults.paramsSerializer = params => qs.stringify(params, { arrayFormat: 'comma' });
+axios.defaults.paramsSerializer = params => qs.stringify(params, { arrayFormat: 'comma' }); //.replace(/%2C/g, ',');
 // Add cookies to requests
 axios.interceptors.request.use(async (config) => {
     const cookieStr = await jar.getCookieString(config.url, { allPaths: true });
@@ -118,14 +124,16 @@ const searchParams = {
 const USER = `${process.env.VSE_USER}`, PW = `${process.env.VSE_PW}`, REGION = 'us-east-1', SEARCH_URL = 'https://api.vistana.com/exp/v1/bookable-segments', AUTH_URL = 'https://login.vistana.com/sso/authenticate';
 class NoKaOi {
     constructor() {
+        this.resultCache = { bookableResults: [] };
+        this.searchParams = searchParams;
         // this.mailer = nodemailer.createTransport({sendmail: true});
         this.mailer = nodemailer.createTransport({
             port: 465,
             secure: true,
             host: 'smtp.gmail.com',
             auth: {
-                user: 'nokaoi.app@gmail.com',
-                pass: 'ik%afunJwKc&8y@Uu8W58L9mi#Ea'
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PW
             }
         });
     }
@@ -321,25 +329,61 @@ class NoKaOi {
     async search() {
         console.log("***SEARCH***");
         return this.get(SEARCH_URL, {
-            params: searchParams,
+            params: this.searchParams,
             headers: {
                 Authorization: `Bearer ${this.token}`,
                 api_key: this.apiKey
             }
         });
     }
-    async handleResults(results) {
+    checkAndCache(bookableResult) {
+        /*
+        const cachedResults = jsonpath.query(this.resultCache, `$.bookableResults[?(@.property.propertyNumber == ${bookableResult.property.propertyNumber} && @.stayDetails[?(@.label == 'Check In:')].value == ${bookableResult!.stayDetails!.find(det => det.label == 'Check In:')?.value || 'bogus'} && @.stayDetails[?(@.label == 'Villa Type:')].value == ${bookableResult!.stayDetails.find(det => det.label == 'Villa Type:')
+        ?.value || 'bogus'})]`) as BookableResult[];
+        */
+        const cachedResult = this.resultCache.bookableResults.find(cached => {
+            let match = cached.property.propertyNumber === bookableResult.property.propertyNumber;
+            return match ? cached.stayDetails.reduce((_match, det) => {
+                return _match === false ? _match :
+                    det.label === 'Check In:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Check In:')?.value :
+                        det.label === 'Villa Type:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Villa Type:')?.value :
+                            _match;
+            }, match) : false;
+        });
+        if (cachedResult) {
+            cachedResult.active = true;
+            return { ...bookableResult, new: false };
+        }
+        else {
+            this.resultCache.bookableResults.push({ ...bookableResult, active: true });
+            return { ...bookableResult, new: true };
+        }
+    }
+    refreshCache() {
+        this.resultCache.bookableResults = this.resultCache.bookableResults.filter(res => res.active).map(res => {
+            delete res.active;
+            return res;
+        });
+    }
+    async handleResults(results, { recipients: { resultsPresent, always } }) {
         // build result view from template and send email.
         // console.log(JSON.stringify(data,null, 2));
         // logging (temporary)
+        jar.removeAllCookies().then(() => {
+            console.log('Cookies cleared!');
+        }).catch(err => {
+            console.error(err);
+        });
+        always = always || [];
+        resultsPresent = resultsPresent || [];
         fs.writeFile(path.resolve(path.dirname((new URL(import.meta.url)).pathname), '../results.json'), JSON.stringify(results, null, 2), { flag: 'w+' });
         if (!this.emailTemplate) {
             await this.setTemplate();
         }
-        const data = { searchLink: '', resultCount: 0, resorts: [] };
+        const data = { searchLink: '', resultCounts: { total: 0, new: 0 }, resorts: [] };
         results = Array.isArray(results) ? results : [results];
         results.forEach((result) => {
-            data.resultCount += result.numberOfResults;
+            data.resultCounts.total += result.numberOfResults;
             result.bookableResults.forEach((bResult) => {
                 const resortId = bResult.property.propertyNumber;
                 let resortData = data.resorts.find(res => res.propertyNumber === resortId);
@@ -348,17 +392,24 @@ class NoKaOi {
                     resortData = data.resorts[resortIdx];
                     resortData.stays = [];
                 }
+                if (bResult.stayDetails.length) {
+                    bResult = this.checkAndCache(bResult);
+                }
+                if (bResult.new) {
+                    data.resultCounts.new++;
+                }
                 resortData.stays.push(bResult);
             });
         });
         const searchUrl = new URL(SEARCH_URL);
-        searchUrl.search = qs.stringify(searchParams);
+        searchUrl.search = qs.stringify(this.searchParams);
         data.searchLink = searchUrl.toString();
         const html = this.emailTemplate(data);
+        always.forEach(recip => resultsPresent.includes(recip) ? '' : resultsPresent.push(recip));
         this.mailer.sendMail({
             from: 'No Ka Oi <nokaoi.app@gmail.com>',
-            to: 'smurphy917@gmail.com',
-            subject: data.resultCount === 0 ? 'No availability 😔' : `${data.resultCount} options available 😎`,
+            to: (data.resultCounts.new > 0 ? resultsPresent : always).join(', '),
+            subject: data.resultCounts.new === 0 ? 'No new availability 😔' : `${data.resultCounts.new} new options available 😎`,
             html
         }, (err, info) => {
             if (err) {
@@ -368,7 +419,7 @@ class NoKaOi {
             console.info(info);
         });
     }
-    async getIt() {
+    async getIt({ searchParams, recipients }) {
         /*
         GET vistana.com/login
         -> form redir /sso
@@ -397,6 +448,7 @@ class NoKaOi {
 
         API /bookableSegments
         */
+        this.searchParams = { ...this.searchParams, ...searchParams };
         this.get('https://villafinder.vistana.com')
             // this.login()
             .catch(err => {
@@ -411,7 +463,7 @@ class NoKaOi {
             // .then(() => this.searchLogin())
             .then(() => this.search())
             .then(response => {
-            this.handleResults(response.data);
+            this.handleResults(response.data, { recipients });
         })
             .catch(err => {
             if (err.request) {
