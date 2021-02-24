@@ -1,4 +1,4 @@
-import NoKaOi, { VillaSearchParams } from './NoKaOi.js';
+import NoKaOi from './NoKaOi.js';
 import cron from 'node-cron';
 
 const keyMap: {[key:string]: string} = {

@@ -1,4 +1,4 @@
-import NoKaOi, { VillaSearchParams } from './NoKaOi.js';
+import NoKaOi from './src/NoKaOi.js';
 import Commander from 'commander';
 const { Command, InvalidOptionArgumentError } = Commander;
 
