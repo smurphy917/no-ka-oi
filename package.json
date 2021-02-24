@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "run:scheduled": "tsc -b && node -r dotenv/config index.js",
     "run:one-off": "node -r dotenv/config one-off.js",
-    "start": "node -r dotenv/config index.js"
+    "start": "node index.js"
   },
   "author": "S.Murphy",
   "license": "ISC",
