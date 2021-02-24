@@ -1,4 +1,4 @@
-import NoKaOi from './src/NoKaOi.js';
+import { Run } from './src/NightManager.js';
 import Commander from 'commander';
 const { Command, InvalidOptionArgumentError } = Commander;
 
