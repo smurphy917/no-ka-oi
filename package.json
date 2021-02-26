@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "Like none other",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "debug": "tsc -b && node -r dotenv/config index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "run:scheduled": "tsc -b && node -r dotenv/config index.js",
     "run:one-off": "node -r dotenv/config one-off.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "knex": "cd ./db && TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' knex"
   },
   "author": "S.Murphy",
   "license": "ISC",
@@ -26,8 +26,12 @@
     "jquery": "^3.5.1",
     "jsdom": "^16.4.0",
     "jsonpath": "^1.1.0",
+    "knex": "^0.21.18",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
     "node-cron": "^2.0.3",
     "nodemailer": "^6.4.18",
+    "pg": "^8.5.1",
     "qs": "^6.9.6",
     "tough-cookie": "^4.0.0"
   },
@@ -36,8 +40,15 @@
     "@types/jquery": "^3.5.5",
     "@types/jsdom": "^16.2.6",
     "@types/jsonpath": "^0.2.0",
+    "@types/knex": "^0.16.1",
+    "@types/koa": "^2.13.0",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-router": "^7.4.1",
     "@types/node-cron": "^2.0.3",
     "@types/nodemailer": "^6.4.0",
+    "@types/pg": "^7.14.10",
+    "koa-router": "^10.0.0",
+    "ts-node": "^9.1.1",
     "typescript": "^4.1.5"
   }
 }

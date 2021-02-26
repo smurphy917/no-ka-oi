@@ -1,4 +1,4 @@
-import AmazonCognitoIdentity, { appendToCognitoUserAgent } from 'amazon-cognito-identity-js';
+import AmazonCognitoIdentity from 'amazon-cognito-identity-js';
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import pkg from 'jsdom';
@@ -14,6 +14,8 @@ import path from 'path';
 import qs from 'qs';
 import jsonpath from 'jsonpath';
 import dateformat from 'dateformat';
+
+__dirname = __dirname; // || path.dirname((new URL(import.meta.url)).pathname);
 
 export type VillaSearchParams = {
     checkinDate?: string;
@@ -203,24 +205,24 @@ class NoKaOi {
     mailer!: Mail;
     resultCache: { bookableResults: BookableResult[] } = { bookableResults: [] };
     searchParams = searchParams;
+    credentials = { vse: { user: USER, password: PW }, email: { host: 'smtp.gmail.com', port: 465, user: process.env.EMAIL_USER, password: process.env.EMAIL_PW } };
 
     constructor() {
         // this.mailer = nodemailer.createTransport({sendmail: true});
         this.mailer = nodemailer.createTransport({
-            port: 465,
+            port: this.credentials.email.port,
             secure: true,
-            host: 'smtp.gmail.com',
+            host: this.credentials.email.host,
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PW
+                user: this.credentials.email.user,
+                pass: this.credentials.email.password
             }
-        })
+        });
     }
 
     async setTemplate() {
         try {
-            const fileUrl = import.meta.url;
-            this.emailTemplate = Handlebars.compile((await fs.readFile(path.resolve(path.dirname((new URL(import.meta.url).pathname)), './templates/email.tmpl'))).toString('utf8'));
+            this.emailTemplate = Handlebars.compile((await fs.readFile(path.resolve(__dirname, './templates/email.tmpl'))).toString('utf8'));
         } catch (err) {
             console.error(err);
         }
@@ -350,8 +352,8 @@ class NoKaOi {
         console.log("***GET TOKEN***");
         return new Promise((resolve, reject) => {
             var authenticationData = {
-                Username: USER,
-                Password: PW,
+                Username: this.credentials.vse.user,
+                Password: this.credentials.vse.password,
             };
             var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(
                 authenticationData
@@ -362,7 +364,7 @@ class NoKaOi {
             };
             var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
             var userData = {
-                Username: USER,
+                Username: this.credentials.vse.user,
                 Pool: userPool,
             };
             var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
@@ -445,11 +447,11 @@ class NoKaOi {
         const cachedResult = this.resultCache.bookableResults.find(cached => {
             let match = cached.property.propertyNumber === bookableResult.property.propertyNumber;
             return match ? cached.stayDetails.reduce((_match: boolean, det) => {
-                return _match === false ? _match : 
-                    det.label === 'Check In:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Check In:')?.value : 
-                    det.label === 'Villa Type:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Villa Type:')?.value : 
-                    _match;
-            }, match) : false;       
+                return _match === false ? _match :
+                    det.label === 'Check In:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Check In:')?.value :
+                        det.label === 'Villa Type:' ? det.value === bookableResult.stayDetails.find(det => det.label === 'Villa Type:')?.value :
+                            _match;
+            }, match) : false;
         })
         if (cachedResult) {
             cachedResult.active = true;
@@ -467,7 +469,7 @@ class NoKaOi {
         });
     }
 
-    async handleResults(results: any, { recipients: { resultsPresent, always } }: { recipients: { always: string[], resultsPresent: string[] } }) {
+    async handleResults(results: any, { recipients: { newResults, always } }: { recipients: { always: string[], newResults: string[] } }) {
         // build result view from template and send email.
         // console.log(JSON.stringify(data,null, 2));
         // logging (temporary)
@@ -477,8 +479,8 @@ class NoKaOi {
             console.error(err);
         })
         always = always || [];
-        resultsPresent = resultsPresent || [];
-        fs.writeFile(path.resolve(path.dirname((new URL(import.meta.url)).pathname), '../results.json'), JSON.stringify(results, null, 2), { flag: 'w+' });
+        newResults = newResults || [];
+        fs.writeFile(path.resolve(__dirname, '../results.json'), JSON.stringify(results, null, 2), { flag: 'w+' });
 
         if (!this.emailTemplate) {
             await this.setTemplate();
@@ -495,7 +497,7 @@ class NoKaOi {
                     resortData = data.resorts[resortIdx];
                     resortData.stays = [];
                 }
-                if(bResult.stayDetails.length) {
+                if (bResult.stayDetails.length) {
                     bResult = this.checkAndCache(bResult);
                 }
                 if (bResult.new) {
@@ -508,10 +510,10 @@ class NoKaOi {
         searchUrl.search = qs.stringify(this.searchParams);
         data.searchLink = searchUrl.toString();
         const html = this.emailTemplate(data);
-        always.forEach(recip => resultsPresent.includes(recip) ? '' : resultsPresent.push(recip));
+        always.forEach(recip => newResults.includes(recip) ? '' : newResults.push(recip));
         this.mailer.sendMail({
             from: 'No Ka Oi <nokaoi.app@gmail.com>',
-            to: (data.resultCounts.new > 0 ? resultsPresent : always).join(', '),
+            to: (data.resultCounts.new > 0 ? newResults : always).join(', '),
             subject: data.resultCounts.new === 0 ? 'No new availability 😔' : `${data.resultCounts.new} new options available 😎`,
             html
         }, (err, info) => {
@@ -523,7 +525,7 @@ class NoKaOi {
         })
     }
 
-    async getIt({ searchParams, recipients }: { searchParams: VillaSearchParams, recipients: { always: string[], resultsPresent: string[] } }) {
+    async getIt({ search, recipients }: { search: VillaSearchParams, recipients: { always: string[], newResults: string[] } }, credentials?: { vse?: { user: string, password: string }, email?: { user: string, password: string, host:string, port: number } }) {
         /*
         GET vistana.com/login
         -> form redir /sso
@@ -553,7 +555,11 @@ class NoKaOi {
         API /bookableSegments
         */
 
-        this.searchParams = {...this.searchParams, ...searchParams};
+        if (credentials) {
+            this.credentials = {...this.credentials, ...credentials};
+        }
+
+        this.searchParams = { ...this.searchParams, ...search };
 
         this.get('https://villafinder.vistana.com')
             // this.login()
