@@ -1,4 +1,4 @@
-import AmazonCognitoIdentity from 'amazon-cognito-identity-js';
+import { AuthenticationDetails, CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import pkg from 'jsdom';
@@ -355,19 +355,19 @@ class NoKaOi {
                 Username: this.credentials.vse.user,
                 Password: this.credentials.vse.password,
             };
-            var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(
+            var authenticationDetails = new AuthenticationDetails(
                 authenticationData
             );
             var poolData = {
                 UserPoolId: 'us-east-1_ouXO2QPTS', // Your user pool id here
                 ClientId: '348gerdh2j08b71kfjqdva812a', // Your client id here
             };
-            var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+            var userPool = new CognitoUserPool(poolData);
             var userData = {
                 Username: this.credentials.vse.user,
                 Pool: userPool,
             };
-            var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            var cognitoUser = new CognitoUser(userData);
 
             cognitoUser.authenticateUser(authenticationDetails, {
                 onSuccess: (result) => {
@@ -525,7 +525,7 @@ class NoKaOi {
         })
     }
 
-    async getIt({ search, recipients }: { search: VillaSearchParams, recipients: { always: string[], newResults: string[] } }, credentials?: { vse?: { user: string, password: string }, email?: { user: string, password: string, host:string, port: number } }) {
+    async getIt({ search, recipients }: { search: VillaSearchParams, recipients: { always: string[], newResults: string[] } }, credentials?: { vse?: { user: string, password: string }, email?: { user: string, password: string, host: string, port: number } }) {
         /*
         GET vistana.com/login
         -> form redir /sso
@@ -556,7 +556,7 @@ class NoKaOi {
         */
 
         if (credentials) {
-            this.credentials = {...this.credentials, ...credentials};
+            this.credentials = { ...this.credentials, ...credentials };
         }
 
         this.searchParams = { ...this.searchParams, ...search };

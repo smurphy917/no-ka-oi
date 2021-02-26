@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const amazon_cognito_identity_js_1 = __importDefault(require("amazon-cognito-identity-js"));
+const amazon_cognito_identity_js_1 = require("amazon-cognito-identity-js");
 const axios_1 = __importDefault(require("axios"));
 const form_data_1 = __importDefault(require("form-data"));
 const jsdom_1 = __importDefault(require("jsdom"));
@@ -289,17 +289,17 @@ class NoKaOi {
                     Username: this.credentials.vse.user,
                     Password: this.credentials.vse.password,
                 };
-                var authenticationDetails = new amazon_cognito_identity_js_1.default.AuthenticationDetails(authenticationData);
+                var authenticationDetails = new amazon_cognito_identity_js_1.AuthenticationDetails(authenticationData);
                 var poolData = {
                     UserPoolId: 'us-east-1_ouXO2QPTS',
                     ClientId: '348gerdh2j08b71kfjqdva812a',
                 };
-                var userPool = new amazon_cognito_identity_js_1.default.CognitoUserPool(poolData);
+                var userPool = new amazon_cognito_identity_js_1.CognitoUserPool(poolData);
                 var userData = {
                     Username: this.credentials.vse.user,
                     Pool: userPool,
                 };
-                var cognitoUser = new amazon_cognito_identity_js_1.default.CognitoUser(userData);
+                var cognitoUser = new amazon_cognito_identity_js_1.CognitoUser(userData);
                 cognitoUser.authenticateUser(authenticationDetails, {
                     onSuccess: (result) => {
                         var accessToken = result.getAccessToken().getJwtToken();
