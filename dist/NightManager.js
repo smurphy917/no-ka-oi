@@ -11,33 +11,38 @@ const keyMap = {
     nights: 'numOfNights',
     disabledRooms: 'ada'
 };
-const schedules = {};
 class NightManager {
     constructor() {
         this.NoKaOi = NoKaOi_js_1.default;
         this.schedules = {};
     }
-    run(params) {
-        const result = Run(params);
+    run(params, credentials, cacheCallback) {
+        const result = Run(params, credentials, cacheCallback);
         if (params.schedule) {
             this.schedules[params.id] = result;
         }
         return result;
     }
     pause(id) {
-        return schedules[id].stop();
+        if (id in this.schedules) {
+            return this.schedules[id].stop();
+        }
     }
     clear(id) {
-        const dest = schedules[id].destroy();
-        delete schedules[id];
-        return dest;
+        if (id in this.schedules) {
+            const dest = this.schedules[id].destroy();
+            delete this.schedules[id];
+            return dest;
+        }
     }
     restart(id) {
-        return schedules[id].start();
+        if (id in this.schedules) {
+            return this.schedules[id].start();
+        }
     }
 }
 exports.default = new NightManager();
-function Run(params, credentials) {
+function Run(params, credentials, cacheCallback) {
     /*
     const searchParams: any = {};
     Object.keys(params).forEach((key: string) => {
@@ -53,7 +58,10 @@ function Run(params, credentials) {
         searchParams, recipients: { always: always || [], newResults: resultsPresent || [] }
     };
     */
-    const getItOpts = Object.assign({}, params);
+    const getItOpts = { name: params.name, search: Object.assign({}, Object.fromEntries(Object.entries(params.search).filter(([key, val]) => key !== 'id' && Array.isArray(val) ? val.length : val))), recipients: Object.assign({}, params.recipients) };
+    if (params.search.allSizes) {
+        getItOpts.search.unitSizes = 'ALL';
+    }
     ['id', 'schedule'].forEach(field => {
         if (field in getItOpts) {
             delete getItOpts[field];
@@ -63,12 +71,12 @@ function Run(params, credentials) {
         console.log('Starting schedule...');
         return node_cron_1.default.schedule(params.schedule, () => {
             console.log('Running!');
-            NoKaOi_js_1.default.getIt(getItOpts, credentials);
+            NoKaOi_js_1.default.getIt(getItOpts, credentials, cacheCallback);
         });
     }
     else {
         console.log('Running once...');
-        return NoKaOi_js_1.default.getIt(getItOpts, credentials);
+        return NoKaOi_js_1.default.getIt(getItOpts, credentials, cacheCallback);
     }
 }
 exports.Run = Run;

@@ -9,7 +9,8 @@
     "run:scheduled": "tsc -b && node -r dotenv/config index.js",
     "run:one-off": "node -r dotenv/config one-off.js",
     "start": "node index.js",
-    "knex": "cd ./db && TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' knex"
+    "knex": "cd ./db && TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' knex",
+    "build": "tsc -b && cp -r src/templates dist/"
   },
   "author": "S.Murphy",
   "license": "ISC",

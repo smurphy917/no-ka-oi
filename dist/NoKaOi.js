@@ -27,6 +27,7 @@ const path_1 = __importDefault(require("path"));
 const qs_1 = __importDefault(require("qs"));
 const jsonpath_1 = __importDefault(require("jsonpath"));
 const dateformat_1 = __importDefault(require("dateformat"));
+const url_1 = require("url");
 __dirname = __dirname; // || path.dirname((new URL(import.meta.url)).pathname);
 handlebars_1.default.registerHelper('jp', function (root, path, context) {
     if (Array.isArray(root)) {
@@ -77,7 +78,7 @@ axios_1.default.interceptors.request.use((config) => __awaiter(void 0, void 0, v
 }));
 // Store cookies from response
 axios_1.default.interceptors.response.use(response => {
-    const urlObj = new URL(response.config.url);
+    const urlObj = new url_1.URL(response.config.url);
     const cookieSource = response.headers['set-cookie'];
     if (cookieSource) {
         (Array.isArray(cookieSource) ? cookieSource : cookieSource.split(',')).forEach((cookie) => {
@@ -143,15 +144,21 @@ class NoKaOi {
         this.resultCache = { bookableResults: [] };
         this.searchParams = searchParams;
         this.credentials = { vse: { user: USER, password: PW }, email: { host: 'smtp.gmail.com', port: 465, user: process.env.EMAIL_USER, password: process.env.EMAIL_PW } };
+        this.cacheCallback = null;
         // this.mailer = nodemailer.createTransport({sendmail: true});
-        this.mailer = nodemailer_1.default.createTransport({
-            port: this.credentials.email.port,
-            secure: true,
-            host: this.credentials.email.host,
-            auth: {
-                user: this.credentials.email.user,
-                pass: this.credentials.email.password
-            }
+        this.setMailer();
+    }
+    setMailer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.mailer = nodemailer_1.default.createTransport({
+                port: this.credentials.email.port,
+                secure: true,
+                host: this.credentials.email.host,
+                auth: {
+                    user: this.credentials.email.user,
+                    pass: this.credentials.email.password
+                }
+            });
         });
     }
     setTemplate() {
@@ -165,7 +172,7 @@ class NoKaOi {
         });
     }
     setState({ request }) {
-        const state = (new URL(request.protocol + request.host + request.path)).searchParams.get('state');
+        const state = (new url_1.URL(request.protocol + request.host + request.path)).searchParams.get('state');
         this.state = state;
         console.log('\t-> state retrieved from page!');
     }
@@ -254,7 +261,7 @@ class NoKaOi {
     post(url, data, options) {
         return __awaiter(this, void 0, void 0, function* () {
             // console.log(`POST ${url}`);
-            return axios_1.default.post(url, (new URLSearchParams(data)).toString(), options)
+            return axios_1.default.post(url, (new url_1.URLSearchParams(data)).toString(), options)
                 .then(response => this.handleResponse(response))
                 .catch(err => this.catchResopnse(err));
         });
@@ -272,7 +279,7 @@ class NoKaOi {
                 return this.post(url, formData);
             }
             else if (method === 'get') {
-                const urlObj = new URL(url);
+                const urlObj = new url_1.URL(url);
                 form.find('input').each((_idx, input) => {
                     urlObj.searchParams.append(input.name, input.value);
                 });
@@ -374,36 +381,50 @@ class NoKaOi {
         });
     }
     checkAndCache(bookableResult) {
-        /*
-        const cachedResults = jsonpath.query(this.resultCache, `$.bookableResults[?(@.property.propertyNumber == ${bookableResult.property.propertyNumber} && @.stayDetails[?(@.label == 'Check In:')].value == ${bookableResult!.stayDetails!.find(det => det.label == 'Check In:')?.value || 'bogus'} && @.stayDetails[?(@.label == 'Villa Type:')].value == ${bookableResult!.stayDetails.find(det => det.label == 'Villa Type:')
-        ?.value || 'bogus'})]`) as BookableResult[];
-        */
-        const cachedResult = this.resultCache.bookableResults.find(cached => {
-            let match = cached.property.propertyNumber === bookableResult.property.propertyNumber;
-            return match ? cached.stayDetails.reduce((_match, det) => {
-                var _a, _b;
-                return _match === false ? _match :
-                    det.label === 'Check In:' ? det.value === ((_a = bookableResult.stayDetails.find(det => det.label === 'Check In:')) === null || _a === void 0 ? void 0 : _a.value) :
-                        det.label === 'Villa Type:' ? det.value === ((_b = bookableResult.stayDetails.find(det => det.label === 'Villa Type:')) === null || _b === void 0 ? void 0 : _b.value) :
-                            _match;
-            }, match) : false;
+        return __awaiter(this, void 0, void 0, function* () {
+            /*
+            const cachedResults = jsonpath.query(this.resultCache, `$.bookableResults[?(@.property.propertyNumber == ${bookableResult.property.propertyNumber} && @.stayDetails[?(@.label == 'Check In:')].value == ${bookableResult!.stayDetails!.find(det => det.label == 'Check In:')?.value || 'bogus'} && @.stayDetails[?(@.label == 'Villa Type:')].value == ${bookableResult!.stayDetails.find(det => det.label == 'Villa Type:')
+            ?.value || 'bogus'})]`) as BookableResult[];
+            */
+            if (this.cacheCallback) {
+                return Object.assign(Object.assign({}, bookableResult), { new: yield this.cacheCallback({
+                        checkinDate: bookableResult.stayDetails.find(det => det.label === 'Check In:').value,
+                        numOfNights: Number.parseInt(bookableResult.stayDetails.find(det => det.label === 'Number of Nights:').value),
+                        villaType: bookableResult.stayDetails.find(det => det.label === 'Villa Type:').value
+                    }) });
+            }
+            const cachedResult = this.resultCache.bookableResults.find(cached => {
+                let match = cached.property.propertyNumber === bookableResult.property.propertyNumber;
+                return match ? cached.stayDetails.reduce((_match, det) => {
+                    var _a, _b;
+                    return _match === false ? _match :
+                        det.label === 'Check In:' ? det.value === ((_a = bookableResult.stayDetails.find(det => det.label === 'Check In:')) === null || _a === void 0 ? void 0 : _a.value) :
+                            det.label === 'Villa Type:' ? det.value === ((_b = bookableResult.stayDetails.find(det => det.label === 'Villa Type:')) === null || _b === void 0 ? void 0 : _b.value) :
+                                _match;
+                }, match) : false;
+            });
+            if (cachedResult) {
+                cachedResult.active = true;
+                return Object.assign(Object.assign({}, bookableResult), { new: false });
+            }
+            else {
+                this.resultCache.bookableResults.push(Object.assign(Object.assign({}, bookableResult), { active: true }));
+                return Object.assign(Object.assign({}, bookableResult), { new: true });
+            }
         });
-        if (cachedResult) {
-            cachedResult.active = true;
-            return Object.assign(Object.assign({}, bookableResult), { new: false });
-        }
-        else {
-            this.resultCache.bookableResults.push(Object.assign(Object.assign({}, bookableResult), { active: true }));
-            return Object.assign(Object.assign({}, bookableResult), { new: true });
-        }
     }
     refreshCache() {
-        this.resultCache.bookableResults = this.resultCache.bookableResults.filter(res => res.active).map(res => {
-            delete res.active;
-            return res;
-        });
+        if (this.cacheCallback) {
+            this.cacheCallback({ finalise: true });
+        }
+        else {
+            this.resultCache.bookableResults = this.resultCache.bookableResults.filter(res => res.active).map(res => {
+                delete res.active;
+                return res;
+            });
+        }
     }
-    handleResults(results, { recipients: { newResults, always } }) {
+    handleResults(results, { name, recipients: { newResults, always } }) {
         return __awaiter(this, void 0, void 0, function* () {
             // build result view from template and send email.
             // console.log(JSON.stringify(data,null, 2));
@@ -421,9 +442,9 @@ class NoKaOi {
             }
             const data = { searchLink: '', resultCounts: { total: 0, new: 0 }, resorts: [] };
             results = Array.isArray(results) ? results : [results];
-            results.forEach((result) => {
+            yield Promise.all(results.map((result) => __awaiter(this, void 0, void 0, function* () {
                 data.resultCounts.total += result.numberOfResults;
-                result.bookableResults.forEach((bResult) => {
+                yield Promise.all(result.bookableResults.map((bResult) => __awaiter(this, void 0, void 0, function* () {
                     const resortId = bResult.property.propertyNumber;
                     let resortData = data.resorts.find(res => res.propertyNumber === resortId);
                     if (!resortData) {
@@ -432,23 +453,23 @@ class NoKaOi {
                         resortData.stays = [];
                     }
                     if (bResult.stayDetails.length) {
-                        bResult = this.checkAndCache(bResult);
+                        bResult = yield this.checkAndCache(bResult);
                     }
                     if (bResult.new) {
                         data.resultCounts.new++;
                     }
                     resortData.stays.push(bResult);
-                });
-            });
-            const searchUrl = new URL(SEARCH_URL);
+                })));
+            })));
+            const searchUrl = new url_1.URL(SEARCH_URL);
             searchUrl.search = qs_1.default.stringify(this.searchParams);
             data.searchLink = searchUrl.toString();
             const html = this.emailTemplate(data);
-            always.forEach(recip => newResults.includes(recip) ? '' : newResults.push(recip));
+            always.forEach(recip => newResults.findIndex(newResRecip => recip.email === newResRecip.email) > -1 ? '' : newResults.push(recip));
             this.mailer.sendMail({
                 from: 'No Ka Oi <nokaoi.app@gmail.com>',
-                to: (data.resultCounts.new > 0 ? newResults : always).join(', '),
-                subject: data.resultCounts.new === 0 ? 'No new availability 😔' : `${data.resultCounts.new} new options available 😎`,
+                to: (data.resultCounts.new > 0 ? newResults : always).reduce((recipientStr, entry) => `${recipientStr},${entry.name ? entry.name + ' <' : ''}${entry.email}${entry.name ? '>' : ''}`, ''),
+                subject: data.resultCounts.new === 0 ? `${name} - No new availability 😔` : `${name} - ${data.resultCounts.new} new options available 😎`,
                 html
             }, (err, info) => {
                 if (err) {
@@ -457,9 +478,10 @@ class NoKaOi {
                 }
                 console.info(info);
             });
+            this.refreshCache();
         });
     }
-    getIt({ search, recipients }, credentials) {
+    getIt({ name, search, recipients }, credentials, cacheCallback) {
         return __awaiter(this, void 0, void 0, function* () {
             /*
             GET vistana.com/login
@@ -489,8 +511,12 @@ class NoKaOi {
     
             API /bookableSegments
             */
+            if (cacheCallback) {
+                this.cacheCallback = cacheCallback;
+            }
             if (credentials) {
                 this.credentials = Object.assign(Object.assign({}, this.credentials), credentials);
+                this.setMailer();
             }
             this.searchParams = Object.assign(Object.assign({}, this.searchParams), search);
             this.get('https://villafinder.vistana.com')
@@ -507,12 +533,13 @@ class NoKaOi {
                 // .then(() => this.searchLogin())
                 .then(() => this.search())
                 .then(response => {
-                this.handleResults(response.data, { recipients });
+                this.handleResults(response.data, { name, recipients });
             })
                 .catch(err => {
                 if (err.request) {
                     err.message = `Failed (${err.response.status}) on request to ${err.request.protocol}//${err.request.host}${err.request.path}`;
                 }
+                jar.removeAllCookies();
                 throw err;
             });
         });

@@ -14,6 +14,8 @@ import path from 'path';
 import qs from 'qs';
 import jsonpath from 'jsonpath';
 import dateformat from 'dateformat';
+import { validate } from 'node-cron';
+import { URL, URLSearchParams } from 'url';
 
 __dirname = __dirname; // || path.dirname((new URL(import.meta.url)).pathname);
 
@@ -206,9 +208,14 @@ class NoKaOi {
     resultCache: { bookableResults: BookableResult[] } = { bookableResults: [] };
     searchParams = searchParams;
     credentials = { vse: { user: USER, password: PW }, email: { host: 'smtp.gmail.com', port: 465, user: process.env.EMAIL_USER, password: process.env.EMAIL_PW } };
+    cacheCallback: ((result: { finalise?: boolean, checkinDate?: string, numOfNights?: number, villaType?: string }) => boolean) | null = null;
 
     constructor() {
         // this.mailer = nodemailer.createTransport({sendmail: true});
+        this.setMailer();
+    }
+
+    async setMailer() {
         this.mailer = nodemailer.createTransport({
             port: this.credentials.email.port,
             secure: true,
@@ -267,7 +274,7 @@ class NoKaOi {
         }
         if (response.status === 200 && response.headers['content-type'].startsWith('text/html')) {
             const { window } = new JSDOM(response.data);
-            const $ = jQuery(window as unknown as Window, true);
+            const $ = jQuery(window, true);
             const form = $('form');
             const formId = form.attr('name') || form.attr('id') || '';
             if (form.length && (formId == 'frm' || formId == '')) {
@@ -392,7 +399,7 @@ class NoKaOi {
 
     async setPageKeys(response: AxiosResponse) {
         const { window } = new JSDOM(response.data);
-        const $ = jQuery(window as unknown as Window, true);
+        const $ = jQuery(window, true);
         // Check for user obj element
         const userObj = $('#userObject');
         if (userObj.length) {
@@ -439,11 +446,22 @@ class NoKaOi {
         })
     }
 
-    checkAndCache(bookableResult: BookableResult) {
+    async checkAndCache(bookableResult: BookableResult) {
         /*
         const cachedResults = jsonpath.query(this.resultCache, `$.bookableResults[?(@.property.propertyNumber == ${bookableResult.property.propertyNumber} && @.stayDetails[?(@.label == 'Check In:')].value == ${bookableResult!.stayDetails!.find(det => det.label == 'Check In:')?.value || 'bogus'} && @.stayDetails[?(@.label == 'Villa Type:')].value == ${bookableResult!.stayDetails.find(det => det.label == 'Villa Type:')
         ?.value || 'bogus'})]`) as BookableResult[];
         */
+
+        if (this.cacheCallback) {
+            return {
+                ...bookableResult, new: await this.cacheCallback({
+                    checkinDate: bookableResult.stayDetails.find(det => det.label === 'Check In:')!.value,
+                    numOfNights: Number.parseInt(bookableResult.stayDetails.find(det => det.label === 'Number of Nights:')!.value),
+                    villaType: bookableResult.stayDetails.find(det => det.label === 'Villa Type:')!.value
+                })
+            };
+        }
+
         const cachedResult = this.resultCache.bookableResults.find(cached => {
             let match = cached.property.propertyNumber === bookableResult.property.propertyNumber;
             return match ? cached.stayDetails.reduce((_match: boolean, det) => {
@@ -463,13 +481,17 @@ class NoKaOi {
     }
 
     refreshCache() {
-        this.resultCache.bookableResults = this.resultCache.bookableResults.filter(res => res.active).map(res => {
-            delete res.active;
-            return res
-        });
+        if (this.cacheCallback) {
+            this.cacheCallback({ finalise: true });
+        } else {
+            this.resultCache.bookableResults = this.resultCache.bookableResults.filter(res => res.active).map(res => {
+                delete res.active;
+                return res
+            });
+        }
     }
 
-    async handleResults(results: any, { recipients: { newResults, always } }: { recipients: { always: string[], newResults: string[] } }) {
+    async handleResults(results: any, { name, recipients: { newResults, always } }: { name: string, recipients: { always: { name?: string, email: string }[], newResults: { name?: string, email: string }[] } }) {
         // build result view from template and send email.
         // console.log(JSON.stringify(data,null, 2));
         // logging (temporary)
@@ -487,9 +509,9 @@ class NoKaOi {
         }
         const data: { searchLink: string, resultCounts: { total: number, new: number }, resorts: any[] } = { searchLink: '', resultCounts: { total: 0, new: 0 }, resorts: [] };
         results = Array.isArray(results) ? results : [results];
-        results.forEach((result: any) => {
+        await Promise.all(results.map(async (result: any) => {
             data.resultCounts.total += result.numberOfResults;
-            result.bookableResults.forEach((bResult: any) => {
+            await Promise.all(result.bookableResults.map(async (bResult: any) => {
                 const resortId = bResult.property.propertyNumber;
                 let resortData = data.resorts.find(res => res.propertyNumber === resortId);
                 if (!resortData) {
@@ -498,23 +520,23 @@ class NoKaOi {
                     resortData.stays = [];
                 }
                 if (bResult.stayDetails.length) {
-                    bResult = this.checkAndCache(bResult);
+                    bResult = await this.checkAndCache(bResult);
                 }
                 if (bResult.new) {
                     data.resultCounts.new++;
                 }
                 resortData.stays.push(bResult);
-            })
-        });
+            }));
+        }));
         const searchUrl = new URL(SEARCH_URL);
         searchUrl.search = qs.stringify(this.searchParams);
         data.searchLink = searchUrl.toString();
         const html = this.emailTemplate(data);
-        always.forEach(recip => newResults.includes(recip) ? '' : newResults.push(recip));
+        always.forEach(recip => newResults.findIndex(newResRecip => recip.email === newResRecip.email) > -1 ? '' : newResults.push(recip));
         this.mailer.sendMail({
             from: 'No Ka Oi <nokaoi.app@gmail.com>',
-            to: (data.resultCounts.new > 0 ? newResults : always).join(', '),
-            subject: data.resultCounts.new === 0 ? 'No new availability 😔' : `${data.resultCounts.new} new options available 😎`,
+            to: (data.resultCounts.new > 0 ? newResults : always).reduce((recipientStr, entry) => `${recipientStr},${entry.name ? entry.name + ' <' : ''}${entry.email}${entry.name ? '>' : ''}`, ''),
+            subject: data.resultCounts.new === 0 ? `${name} - No new availability 😔` : `${name} - ${data.resultCounts.new} new options available 😎`,
             html
         }, (err, info) => {
             if (err) {
@@ -522,10 +544,11 @@ class NoKaOi {
                 return;
             }
             console.info(info);
-        })
+        });
+        this.refreshCache();
     }
 
-    async getIt({ search, recipients }: { search: VillaSearchParams, recipients: { always: string[], newResults: string[] } }, credentials?: { vse?: { user: string, password: string }, email?: { user: string, password: string, host: string, port: number } }) {
+    async getIt({ name, search, recipients }: { name: string, search: VillaSearchParams, recipients: { always: { name?: string, email: string }[], newResults: { name?: string, email: string }[] } }, credentials?: { vse?: { user: string, password: string }, email?: { user: string, password: string, host: string, port: number } }, cacheCallback?: (arg0: any) => boolean) {
         /*
         GET vistana.com/login
         -> form redir /sso
@@ -555,8 +578,13 @@ class NoKaOi {
         API /bookableSegments
         */
 
+        if (cacheCallback) {
+            this.cacheCallback = cacheCallback;
+        }
+
         if (credentials) {
             this.credentials = { ...this.credentials, ...credentials };
+            this.setMailer();
         }
 
         this.searchParams = { ...this.searchParams, ...search };
@@ -575,12 +603,13 @@ class NoKaOi {
             // .then(() => this.searchLogin())
             .then(() => this.search())
             .then(response => {
-                this.handleResults(response.data, { recipients });
+                this.handleResults(response.data, { name, recipients });
             })
             .catch(err => {
                 if (err.request) {
                     err.message = `Failed (${err.response.status}) on request to ${err.request.protocol}//${err.request.host}${err.request.path}`;
                 }
+                jar.removeAllCookies();
                 throw err;
             });
 

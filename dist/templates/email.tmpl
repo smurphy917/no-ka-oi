@@ -1,0 +1,91 @@
+{{#*inline "stay"}}
+{{#if stayDetails}}
+<td><span>{{as-date (jp-single this '$.stayDetails[?(@.label == \'Check In:\')].value') 'mmm-dd-yyyy'}}</span></td>
+<td><span>{{jp-single this '$.stayDetails[?(@.label == \'Number of Nights:\')].value'}}</span></td>
+<td><span>{{jp-single this '$.stayDetails[?(@.label == \'Villa Type:\')].value'}} (sleeps {{jp-single this
+        '$.stayDetails[?(@.label == \'Max Occupancy:\')].value'}})</span></td>
+<!--td>{{#each reservationTypes}}<span>{{type}} - {{balance}} <form method="POST" action="https://villafinder.vistana.com/details"><input type="hidden" value="{{bookableSegment}}"><button type="submit">Book</button></form></span>{{#unless @last}}<br>{{/unless}}{{/each}}</td-->
+<td>{{#each reservationTypes}}<span>{{type}} - {{balance}} <form method="GET"
+            action="https://villafinder.vistana.com/reserve-villa"><input name="resultId" type="hidden"
+                value="{{resultId}}"><input type="hidden" value="0"><button type="submit">Book</button></form>
+        </span>{{#unless @last}}<br>{{/unless}}{{/each}}</td>
+{{else}}
+<td colspan="4">None available</td>
+{{/if}}
+{{/inline}}
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" style="width:100%;font-family:'Helvetica Neue', Helvetica, Arial,
+    sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <style>
+        body {
+            font-size: 13px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        table td,
+        table th {
+            border: 1px solid black;
+            padding: 8px;
+        }
+
+        img {
+            max-width: 200px;
+        }
+
+        .new {
+            background-color: lightgreen;
+        }
+    </style>
+</head>
+
+<body>
+    <table style="width: 100%; border: none;">
+
+        <table align="center" style="width: 600px;">
+            <thead>
+                <tr>
+                    <th align="left" colspan="5" style="border: none;">
+                        <h2><a href="{{searchLink}}">{{#if resultCounts.total}}{{resultCounts.total}}{{else}}No{{/if}} Results{{#if resultCounts.new}} ({{resultCounts.new}} new!){{/if}}</a></h2>
+                    </th>
+                </tr>
+                <tr>
+                    <th>Property</th>
+                    <th style="width: 100px;">Check In</th>
+                    <th style="width: 80px;">Nights</th>
+                    <th style="width: 120px;">Villa Type</th>
+                    <th style="width: 120px;">Booking</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each resorts}}
+                <tr{{#if stays.[0].new}} class="new"{{/if}}>
+                    <td rowspan="{{stays.length}}">
+                        <h3>{{name}}</h3><img src="{{resortImage}}" />
+                    </td>
+                    {{#with stays.[0]}}
+                    {{> stay}}
+                    {{/with}}
+                </tr>
+                {{#each stays}}
+                {{#unless @first}}
+                <tr{{#if new}} class="new"{{/if}}>
+                    {{> stay}}
+                </tr>
+                {{/unless}}
+                {{/each}}
+                {{/each}}
+            </tbody>
+        </table>
+    </table>
+</body>
+
+</html>
