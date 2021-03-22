@@ -29,6 +29,34 @@ const jsonpath_1 = __importDefault(require("jsonpath"));
 const dateformat_1 = __importDefault(require("dateformat"));
 const url_1 = require("url");
 __dirname = __dirname; // || path.dirname((new URL(import.meta.url)).pathname);
+class ServerResponseError {
+    constructor(err) {
+        this.config = err.config;
+        this.code = err.code;
+        this.isAxiosError = err.isAxiosError;
+        this.name = err.name;
+        this.message = err.message;
+        this.response = err.response;
+        this.request = err.request;
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, ServerResponseError);
+        }
+    }
+    toJSON() {
+        return {
+            config: this.config,
+            code: this.code,
+            name: this.name,
+            message: this.message
+        };
+    }
+    toString() {
+        var _a;
+        return `${this.message}
+        Error from server on ${this.config.method} ${this.config.url}: ${this.code}
+        ${(_a = this.response) === null || _a === void 0 ? void 0 : _a.data}`;
+    }
+}
 handlebars_1.default.registerHelper('jp', function (root, path, context) {
     if (Array.isArray(root)) {
         root = { __temp: root };
@@ -245,8 +273,11 @@ class NoKaOi {
                     throw new AuthenticationError('Cannot authenticate as token or state are missing.');
                 }
             }
+            else if (error instanceof AuthenticationError) {
+                throw error;
+            }
             else {
-                throw (error);
+                throw new ServerResponseError(error);
             }
         });
     }

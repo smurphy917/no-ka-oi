@@ -1,5 +1,5 @@
 import { AuthenticationDetails, CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosProxyConfig, AxiosRequestConfig, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 import pkg from 'jsdom';
 const { JSDOM } = pkg;
@@ -14,10 +14,49 @@ import path from 'path';
 import qs from 'qs';
 import jsonpath from 'jsonpath';
 import dateformat from 'dateformat';
-import { validate } from 'node-cron';
 import { URL, URLSearchParams } from 'url';
 
 __dirname = __dirname; // || path.dirname((new URL(import.meta.url)).pathname);
+
+class ServerResponseError implements AxiosError {
+
+    config: AxiosRequestConfig;
+    isAxiosError: boolean;
+    code: string | undefined;
+    name: string;
+    message: string;
+    response: AxiosResponse | undefined;
+    request: any | undefined;
+
+    constructor(err: AxiosError) {
+        this.config = err.config;
+        this.code = err.code;
+        this.isAxiosError = err.isAxiosError;
+        this.name = err.name;
+        this.message = err.message;
+        this.response = err.response;
+        this.request = err.request;
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, ServerResponseError)
+        }
+    }
+
+    toJSON() {
+        return {
+            config: this.config,
+            code: this.code,
+            name: this.name,
+            message: this.message
+        };
+    }
+
+    toString() {
+        return `${this.message}
+        Error from server on ${this.config.method} ${this.config.url}: ${this.code}
+        ${this.response?.data}`;
+    }
+}
 
 export type VillaSearchParams = {
     checkinDate?: string;
@@ -306,8 +345,10 @@ class NoKaOi {
             } else {
                 throw new AuthenticationError('Cannot authenticate as token or state are missing.');
             }
+        } else if (error instanceof AuthenticationError) {
+            throw error;
         } else {
-            throw (error);
+            throw new ServerResponseError(error);
         }
     }
 
